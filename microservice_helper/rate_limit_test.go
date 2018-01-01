@@ -58,7 +58,7 @@ func TestTokenBucketWithTimeoutSetting(t *testing.T) {
 			Convey("Then the request rate is controled", func() {
 				time_escaped := time.Since(t1)
 				So(err, ShouldBeNil)
-				So(cntSuccessfulInvoking, ShouldEqual, 3)
+				So(cntSuccessfulInvoking, ShouldEqual, 5)
 				So(time_escaped.Seconds(), ShouldBeGreaterThanOrEqualTo, 1)
 			})
 		})
