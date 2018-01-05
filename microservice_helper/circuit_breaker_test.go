@@ -15,6 +15,9 @@ import (
 
 const RESULT = "Done"
 
+var ErrorConnectionFailure = errors.New("Connection failure.")
+var ErrorNotRetryable = errors.New("Not retryable.")
+
 func TestRunSuccessfully(t *testing.T) {
 
 	Convey("Given a service call", t, func() {
@@ -51,7 +54,7 @@ func TestCutOffWhenTimeout(t *testing.T) {
 
 			_, err := CallDependentService("my_command", serviceInvoke, nil)
 			Convey("Then a timeout error occurs", func() {
-				So(IsTimeoutError(err), ShouldBeTrue)
+				So(err == hystrix.ErrTimeout, ShouldBeTrue)
 			})
 		})
 
@@ -119,8 +122,8 @@ func TestAutoRetryWhenErrorOccur(t *testing.T) {
 			t1 := time.Now()
 			AutoRetry(func() (interface{}, error) {
 				executeCnt++
-				return nil, errors.New("Retryable")
-			}, retrySettings, []string{"Retryable"})
+				return nil, ErrorConnectionFailure
+			}, retrySettings, []error{ErrorConnectionFailure})
 			escaped_time := time.Since(t1)
 			Convey("Then logic has been retried", func() {
 				So(executeCnt, ShouldEqual, 4)
@@ -146,14 +149,42 @@ func TestAutoRetrySucceedAfterRetry(t *testing.T) {
 				if executeCnt > 1 {
 					return RESULT, nil
 				}
-				return nil, errors.New("Retryable")
-			}, retrySettings, []string{"Retryable"})
+				return nil, ErrorConnectionFailure
+			}, retrySettings, []error{ErrorConnectionFailure})
 
 			Convey("Then after retrying, the logic would be executed successfully",
 				func() {
 					So(executeCnt, ShouldEqual, 2)
 					So(err, ShouldBeNil)
 					So(ret, ShouldEqual, RESULT)
+				})
+		})
+	})
+}
+
+func TestAutoRetryWouldNotBeTriggeredWhenErrorIsNotRetryable(t *testing.T) {
+	Convey("Given a retryable function", t, func() {
+		retrySettings := RetrySettings{
+			retryTimes:             3,
+			retryInterval:          time.Second * 1,
+			retryIntervalIncrement: time.Millisecond * 500,
+		}
+		executeCnt := 0
+		Convey("When retryable error occurred", func() {
+
+			ret, err := AutoRetry(func() (interface{}, error) {
+				executeCnt++
+				if executeCnt > 1 {
+					return RESULT, nil
+				}
+				return nil, ErrorNotRetryable
+			}, retrySettings, []error{ErrorConnectionFailure})
+
+			Convey("Then after retrying, the logic would be executed successfully",
+				func() {
+					So(executeCnt, ShouldEqual, 1)
+					So(err == ErrorNotRetryable, ShouldBeTrue)
+					So(ret, ShouldNotEqual, RESULT)
 				})
 		})
 	})

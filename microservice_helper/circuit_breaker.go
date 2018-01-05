@@ -31,17 +31,6 @@ func isRetryable(err error, retryableErrorFlags []string) bool {
 	return false
 }
 
-func ErrorDescContains(err error, subString string) bool {
-	if strings.Contains(strings.ToLower(err.Error()), "timeout") {
-		return true
-	}
-	return false
-}
-
-func IsTimeoutError(err error) bool {
-	return ErrorDescContains(err, "timeout")
-}
-
 //call dependent service with the fallback and circuit mechanism
 func CallDependentService(settingGroup string, //configuration setting group name
 	invokeDependentService func() (interface{}, error),
@@ -74,8 +63,18 @@ func CallDependentService(settingGroup string, //configuration setting group nam
 	}
 }
 
+func isRetryableError(err error, retryableErrors *[]error) bool {
+	for _, retryableError := range *retryableErrors {
+		if err == retryableError {
+			return true
+		}
+	}
+	return false
+}
+
+//retry the logic when retryable errors are thrown
 func AutoRetry(runnable func() (interface{}, error), retrySettings RetrySettings,
-	retryableErrorFlags []string) (interface{}, error) {
+	retryableErrors []error) (interface{}, error) {
 	var ret interface{}
 	var err error
 	retryInterval := retrySettings.retryInterval
@@ -85,6 +84,10 @@ func AutoRetry(runnable func() (interface{}, error), retrySettings RetrySettings
 			return ret, nil
 		}
 
+		if !(isRetryableError(err, &retryableErrors)) {
+			break
+		}
+
 		if i >= retrySettings.retryTimes {
 			break
 		}
@@ -92,5 +95,5 @@ func AutoRetry(runnable func() (interface{}, error), retrySettings RetrySettings
 		retryInterval += retrySettings.retryIntervalIncrement
 		i = i + 1
 	}
-	return nil, err
+	return ret, err
 }

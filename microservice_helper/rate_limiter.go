@@ -1,9 +1,18 @@
+/*
+	This package is to provide the basic mechanisms,
+	which are the fundations for building the high reliable microservice application
+
+	Author: Chao Cai
+
+*/
 package microservice_helper
 
 import (
 	"errors"
 	"time"
 )
+
+var ErrorGettingTokenTimeout = errors.New("Failed to get token for timeout.")
 
 func GetToken(tokenBucket chan time.Time,
 	timeout time.Duration) (time.Time, error) {
@@ -14,11 +23,12 @@ func GetToken(tokenBucket chan time.Time,
 		case token = <-tokenBucket:
 			return token, nil
 		case <-time.After(timeout):
-			return token, errors.New("Failed to get token for time out")
+			return token, ErrorGettingTokenTimeout
 		}
+	} else {
+		token = <-tokenBucket
+		return token, nil
 	}
-	token = <-tokenBucket
-	return token, nil
 
 }
 
