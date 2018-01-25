@@ -189,3 +189,31 @@ func TestAutoRetryWouldNotBeTriggeredWhenErrorIsNotRetryable(t *testing.T) {
 		})
 	})
 }
+
+func TestExampleCallDependentService_WithFallback(t *testing.T) {
+	Convey("Given an example of CallDependentService", t, func() {
+		Convey("When run the example", func() {
+			ret, err := ExampleCallDependentService_WithFallback()
+			Convey("Then get the expected results", func() {
+				So(ret, ShouldEqual, 2)
+				So(err, ShouldBeNil)
+			})
+
+		})
+	})
+
+}
+
+func TestExampleCallDependentService_WithoutFallback(t *testing.T) {
+	Convey("Given an example of CallDependentService", t, func() {
+		Convey("When run the example", func() {
+			ret, err := ExampleCallDependentService_WithoutFallback()
+			Convey("Then get the expected results", func() {
+				So(ret, ShouldEqual, -1)
+				So(err == hystrix.ErrTimeout, ShouldBeTrue)
+			})
+
+		})
+	})
+
+}
