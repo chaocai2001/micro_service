@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const WAIT_ANYWAY time.Duration = 0
+
 var ErrorGettingTokenTimeout = errors.New("Failed to get token for timeout.")
 
 func GetToken(tokenBucket chan time.Time,
@@ -60,7 +62,7 @@ func ExampleRateLimit() {
 	//the (numOfTokens) tokes would be put into bucket in the  period (tokenFillingInterval)
 	//func CreateTokenBucket(sizeOfBucket int, numOfTokens int,tokenFillingInterval time.Duration) chan time.Time
 	bucket := CreateTokenBucket(3, 2, time.Second*1)
-	token, err = GetToken(bucket, WAIT_ANYWAY) //set the timeout or waiting any anyway
+	_, err := GetToken(bucket, WAIT_ANYWAY) //set the timeout or waiting any anyway
 
 	if err == nil {
 		//put the service logic here
