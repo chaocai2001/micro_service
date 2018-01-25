@@ -32,6 +32,10 @@ func GetToken(tokenBucket chan time.Time,
 
 }
 
+//Create a token bucket
+//sizeOfBucket is the size of the leaky bucket
+//numOfTokens, tokenFillingInterval are used to rate limit,
+//the (numOfTokens) tokes would be put into bucket in the  period (tokenFillingInterval)
 func CreateTokenBucket(sizeOfBucket int, numOfTokens int,
 	tokenFillingInterval time.Duration) chan time.Time {
 	bucket := make(chan time.Time, sizeOfBucket)
@@ -47,4 +51,18 @@ func CreateTokenBucket(sizeOfBucket int, numOfTokens int,
 		}
 	}()
 	return bucket
+}
+
+func ExampleRateLimit() {
+	//Create a token bucket
+	//sizeOfBucket is the size of the leaky bucket
+	//numOfTokens, tokenFillingInterval are used to rate limit,
+	//the (numOfTokens) tokes would be put into bucket in the  period (tokenFillingInterval)
+	//func CreateTokenBucket(sizeOfBucket int, numOfTokens int,tokenFillingInterval time.Duration) chan time.Time
+	bucket := CreateTokenBucket(3, 2, time.Second*1)
+	token, err = GetToken(bucket, WAIT_ANYWAY) //set the timeout or waiting any anyway
+
+	if err == nil {
+		//put the service logic here
+	}
 }
