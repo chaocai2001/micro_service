@@ -76,7 +76,7 @@ func ExampleCallDependentService_WithoutFallback() (int, error) {
 		return -1, err
 	}
 	return ret.(int), err
-	//Output : -1 ,nil
+	//Output : -1 ,hystrix.ErrTimeout
 }
 
 func ExampleCallDependentService_WithFallback() (int, error) {
