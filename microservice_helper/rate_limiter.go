@@ -15,7 +15,22 @@ import (
 const WAIT_ANYWAY time.Duration = 0
 
 var ErrorGettingTokenTimeout = errors.New("Failed to get token for timeout.")
+var ErrorNoToken = errors.New("Failed to get token")
 
+//Try to get a token, the function would be return immediately.
+//If the token is not ready, an error (ErrorNoToken) will be thrown.
+func TryToGetToken(tokenBucket chan time.Time) (time.Time, error) {
+	var token time.Time
+	select {
+	case token = <-tokenBucket:
+		return token, nil
+	default:
+		return token, ErrorNoToken
+	}
+}
+
+//Get a token, if the token cann't be ready in the setting timeout duration,
+//the timeout error (ErrorGettingTokenTimeout) will be thrown.
 func GetToken(tokenBucket chan time.Time,
 	timeout time.Duration) (time.Time, error) {
 	var token time.Time

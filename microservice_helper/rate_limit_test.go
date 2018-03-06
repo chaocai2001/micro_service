@@ -8,7 +8,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-const WAIT_ANYWAY time.Duration = 0
+//const WAIT_ANYWAY time.Duration = 0
 
 func TestTokenBucket(t *testing.T) {
 	Convey("Given a service call", t, func() {
@@ -60,6 +60,46 @@ func TestTokenBucketWithTimeoutSetting(t *testing.T) {
 				So(err, ShouldBeNil)
 				So(cntSuccessfulInvoking, ShouldEqual, 5)
 				So(time_escaped.Seconds(), ShouldBeGreaterThanOrEqualTo, 1)
+			})
+		})
+
+	})
+}
+
+func TestTryToGetTokenBucket(t *testing.T) {
+	Convey("Given a service call", t, func() {
+		bucket := CreateTokenBucket(3, 2, time.Second*1)
+		Convey("When controling the coming request with the token bucket\n", func() {
+			cntSuccessfulInvoking := 0
+			cntNoTokenErr := 0
+			//	t1 := time.Now()
+			var err error
+			var token time.Time
+			for i := 0; i < 5; i++ {
+				token, err = TryToGetToken(bucket)
+				//put the service logic here
+				if err == nil {
+					fmt.Println(token)
+					cntSuccessfulInvoking++
+				} else if err == ErrorNoToken {
+					cntNoTokenErr++
+					fmt.Println(err)
+				}
+			}
+			time.Sleep(time.Second * 1)
+			token, err = TryToGetToken(bucket)
+			if err == nil {
+				fmt.Println(token)
+				cntSuccessfulInvoking++
+			} else if err == ErrorNoToken {
+				cntNoTokenErr++
+				fmt.Println(err)
+			}
+			Convey("Then the request rate is controled", func() {
+				fmt.Println(cntSuccessfulInvoking)
+				fmt.Println(cntNoTokenErr)
+				So(cntSuccessfulInvoking, ShouldEqual, 4)
+				So(cntNoTokenErr, ShouldEqual, 2)
 			})
 		})
 
