@@ -46,7 +46,7 @@ func TestTokenBucketWithTimeoutSetting(t *testing.T) {
 			var err error
 			var token time.Time
 			for i := 0; i < 6; i++ {
-				token, err = GetToken(bucket, time.Millisecond*500)
+				token, err = GetToken(bucket, time.Millisecond*520)
 				//put the service logic here
 				if err == nil {
 					fmt.Println(token)
@@ -86,7 +86,7 @@ func TestTryToGetTokenBucket(t *testing.T) {
 					fmt.Println(err)
 				}
 			}
-			time.Sleep(time.Second * 1)
+			time.Sleep(time.Millisecond * 1100)
 			token, err = TryToGetToken(bucket)
 			if err == nil {
 				fmt.Println(token)

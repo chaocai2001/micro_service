@@ -11,7 +11,7 @@ import (
 func TestMaxNumGroutingControl(t *testing.T) {
 	Convey("Given the max number of groutings setting", t, func() {
 		maxNumOfGrouting := 10
-		controller := CreateGoroutingController(maxNumOfGrouting)
+		controller := CreateGoroutineController(maxNumOfGrouting)
 		Convey("When the number of the goroutings beyond the limit", func() {
 			var err error
 			for i := 0; i < maxNumOfGrouting+1; i++ {
@@ -35,7 +35,7 @@ func TestMaxNumGroutingControl(t *testing.T) {
 func TestMaxNumGroutingControlByCall_StartGrouting(t *testing.T) {
 	Convey("Given the max number of groutings setting", t, func() {
 		maxNumOfGrouting := 10
-		controller := CreateGoroutingController(maxNumOfGrouting)
+		controller := CreateGoroutineController(maxNumOfGrouting)
 		Convey("When the number of the goroutings beyond the limit", func() {
 			var err error
 			for i := 0; i < maxNumOfGrouting+1; i++ {

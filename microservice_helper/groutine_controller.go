@@ -10,41 +10,46 @@ type token struct{}
 var TokenPoolNotAvailableError error = errors.New("Token pool is not available.")
 var TokenWaitingTimeoutError error = errors.New("Token waiting is time out.")
 
-type GoroutingController struct {
-	maxNumOfRoutings int
+// GoroutingController is the concurrency settings of groutine
+type GoroutineController struct {
+	maxNumOfRoutines int
 	tokenPools       chan token
 }
 
-func CreateGoroutingController(maxNumOfRoutings int) *GoroutingController {
-	controller := GoroutingController{maxNumOfRoutings, make(chan token, maxNumOfRoutings)}
+// CreateGoroutineController is to create a concurrency controller
+func CreateGoroutineController(maxNumOfRoutings int) *GoroutineController {
+	controller := GoroutineController{maxNumOfRoutings, make(chan token, maxNumOfRoutings)}
 	for i := 0; i < maxNumOfRoutings; i++ {
 		controller.tokenPools <- token{}
 	}
 	return &controller
 }
 
-func (controller *GoroutingController) ApplyToken(waitingTimeout time.Duration) error {
+// ApplyToken is to apply a token. Before starting a groutine, you should apply a token
+func (controller *GoroutineController) ApplyToken(waitingTimeout time.Duration) error {
 	select {
 	case _, ok := <-controller.tokenPools:
 		if !ok {
 			return TokenPoolNotAvailableError
 		}
 		return nil
-	case <-time.After(waitingTimeout): //timeout mechanism is to avoid of being blocked forever/gorouting leaking
+	case <-time.After(waitingTimeout): //timeout mechanism is to avoid of being blocked forever/goroutine leaking
 		return TokenWaitingTimeoutError
 	}
 }
 
-func (controller *GoroutingController) ReleaseToken() {
+// ReleaseToken is to release the token. It should be invoked when a groutine is over
+func (controller *GoroutineController) ReleaseToken() {
 	controller.tokenPools <- token{}
 }
 
-func (controller *GoroutingController) NumOfGoroutingCanBeCreated() int {
+// NumOfGoroutingCanBeCreated is to get the number of groutine can be created
+func (controller *GoroutineController) NumOfGoroutingCanBeCreated() int {
 	return len(controller.tokenPools)
 }
 
-//The function is a little bit tricky, if you don't really understand why declare innerParam, please don't use it
-func (controller *GoroutingController) StartGorouting(
+// StartGorouting is a little bit tricky, if you don't really understand why declare innerParam, please don't use it
+func (controller *GoroutineController) StartGorouting(
 	f func(param interface{}), waitingTimeout time.Duration, innerParam interface{}) error {
 	if err := controller.ApplyToken(waitingTimeout); err == nil {
 		go func() {
@@ -61,7 +66,7 @@ func (controller *GoroutingController) StartGorouting(
 
 func ExampleGroutingNumberControl() error {
 	maxNumOfGrouting := 10
-	controller := CreateGoroutingController(maxNumOfGrouting) //create a controller
+	controller := CreateGoroutineController(maxNumOfGrouting) //create a controller
 	var err error
 	for i := 0; i < maxNumOfGrouting+1; i++ {
 		//Get a token, before starting a new gorouting

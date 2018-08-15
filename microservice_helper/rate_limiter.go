@@ -1,10 +1,3 @@
-/*
-	This package is to provide the basic mechanisms,
-	which are the fundations for building the high reliable microservice application
-
-	Author: Chao Cai
-
-*/
 package microservice_helper
 
 import (
@@ -12,13 +5,18 @@ import (
 	"time"
 )
 
+// WAIT_ANYWAY is to disable the waiting timeout
 const WAIT_ANYWAY time.Duration = 0
 
+// ErrorGettingTokenTimeout occured when waiting token timeout
 var ErrorGettingTokenTimeout = errors.New("Failed to get token for timeout.")
+
+// ErrorNoToken occured when invoking TryToGetToken and no token is available
+// that moment
 var ErrorNoToken = errors.New("Failed to get token")
 
-//Try to get a token, the function would be return immediately.
-//If the token is not ready, an error (ErrorNoToken) will be thrown.
+// TryToGetToken is try to get a token, the function would be return immediately.
+// If the token is not ready, an error (ErrorNoToken) will be thrown.
 func TryToGetToken(tokenBucket chan time.Time) (time.Time, error) {
 	var token time.Time
 	select {
@@ -29,8 +27,8 @@ func TryToGetToken(tokenBucket chan time.Time) (time.Time, error) {
 	}
 }
 
-//Get a token, if the token cann't be ready in the setting timeout duration,
-//the timeout error (ErrorGettingTokenTimeout) will be thrown.
+// GetToken is to get a token, if the token cann't be ready in the setting timeout duration,
+// the timeout error (ErrorGettingTokenTimeout) will be thrown.
 func GetToken(tokenBucket chan time.Time,
 	timeout time.Duration) (time.Time, error) {
 	var token time.Time
@@ -64,6 +62,8 @@ func CreateTokenBucket(sizeOfBucket int, numOfTokens int,
 		for t := range time.Tick(tokenFillingInterval) {
 			for i := 0; i < numOfTokens; i++ {
 				bucket <- t
+				sleepTime := tokenFillingInterval / time.Duration(numOfTokens)
+				time.Sleep(time.Nanosecond * sleepTime)
 			}
 		}
 	}()

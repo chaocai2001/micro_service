@@ -1,10 +1,6 @@
-/*
-	This package is to provide the basic mechanisms,
-	which are the fundations for building the high reliable microservice application
-
-	Author: Chao Cai
-
-*/
+// Package microservice_helper is to provide the basic mechanisms,
+// which are the fundations for building the high reliable microservice application
+// Author: Chao Cai
 package microservice_helper
 
 import (
@@ -14,8 +10,10 @@ import (
 	"github.com/afex/hystrix-go/hystrix"
 )
 
+// FallbackFunc is the fallback function definition
 type FallbackFunc func(error) (interface{}, error)
 
+// RetrySettings is settings for auto-retrying
 type RetrySettings struct {
 	retryTimes             int           //retry times befpre returning error
 	retryInterval          time.Duration //the initial interval for retrying
@@ -31,7 +29,7 @@ func isRetryable(err error, retryableErrorFlags []string) bool {
 	return false
 }
 
-//call dependent service with the fallback and circuit mechanism
+// CallDependentService is to call dependent service with the fallback and circuit mechanism
 func CallDependentService(settingGroup string, //configuration setting group name
 	invokeDependentService func() (interface{}, error),
 	fallbackFunc FallbackFunc) (interface{}, error) {
@@ -101,7 +99,7 @@ func isRetryableError(err error, retryableErrors *[]error) bool {
 	return false
 }
 
-//retry the logic when retryable errors are thrown
+//AutoRetry is to retry the logic when retryable errors are thrown
 func AutoRetry(runnable func() (interface{}, error), retrySettings RetrySettings,
 	retryableErrors []error) (interface{}, error) {
 	var ret interface{}
