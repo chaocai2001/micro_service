@@ -60,7 +60,10 @@ func CreateTokenBucket(sizeOfBucket int, numOfTokens int,
 	}
 	go func() {
 		for t := range time.Tick(tokenFillingInterval / time.Duration(numOfTokens)) {
-			bucket <- t
+			select {
+			case bucket <- t:
+			default:
+			}
 		}
 	}()
 	return bucket
