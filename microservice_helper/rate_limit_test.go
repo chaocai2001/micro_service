@@ -29,7 +29,7 @@ func TestTokenBucket(t *testing.T) {
 			Convey("Then the request rate is controled", func() {
 				time_escaped := time.Since(t1)
 				So(err, ShouldBeNil)
-				So(time_escaped.Seconds(), ShouldBeGreaterThanOrEqualTo, 1+1)
+				So(time_escaped.Seconds(), ShouldBeGreaterThanOrEqualTo, 0.5*3)
 				So(cntSuccessfulInvoking, ShouldEqual, 6)
 			})
 		})
@@ -58,7 +58,7 @@ func TestTokenBucketWithTimeoutSetting(t *testing.T) {
 			Convey("Then the request rate is controled", func() {
 				time_escaped := time.Since(t1)
 				So(err, ShouldBeNil)
-				So(cntSuccessfulInvoking, ShouldEqual, 5)
+				So(cntSuccessfulInvoking, ShouldEqual, 6)
 				So(time_escaped.Seconds(), ShouldBeGreaterThanOrEqualTo, 1)
 			})
 		})
@@ -104,4 +104,38 @@ func TestTryToGetTokenBucket(t *testing.T) {
 		})
 
 	})
+}
+
+func TestForVerfyingTokenBucket(t *testing.T) {
+	bucket := CreateTokenBucket(3, 1, time.Second*1)
+	var err error
+	var token time.Time
+	cntToken := 0
+	// clean the bucket firstly
+	for i := 0; i < 3; i++ {
+		_, err = TryToGetToken(bucket)
+		if err == nil {
+			cntToken++
+		}
+	}
+	if cntToken != 3 {
+		t.Errorf("Should get 3 token, but actual number of token is %d", cntToken)
+	}
+
+	time.Sleep(time.Second * 6)
+	t1 := time.Now()
+	for j := 0; j < 6; {
+		token, err = TryToGetToken(bucket)
+		nowSecond := time.Now().Second()
+		if err == nil {
+			j++
+			fmt.Printf("Token put at %v and got at %v\n", token, nowSecond)
+		} else {
+			time.Sleep(time.Millisecond * 1)
+		}
+	}
+	time_escaped := time.Since(t1)
+	if time_escaped < 3 {
+		t.Error("logic is wrong. Token is blocked when the bucket is full")
+	}
 }

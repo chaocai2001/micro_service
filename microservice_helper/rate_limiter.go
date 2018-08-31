@@ -59,12 +59,8 @@ func CreateTokenBucket(sizeOfBucket int, numOfTokens int,
 		bucket <- time.Now()
 	}
 	go func() {
-		for t := range time.Tick(tokenFillingInterval) {
-			for i := 0; i < numOfTokens; i++ {
-				bucket <- t
-				sleepTime := tokenFillingInterval / time.Duration(numOfTokens)
-				time.Sleep(time.Nanosecond * sleepTime)
-			}
+		for t := range time.Tick(tokenFillingInterval / time.Duration(numOfTokens)) {
+			bucket <- t
 		}
 	}()
 	return bucket
